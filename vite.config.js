@@ -40,6 +40,17 @@ export default defineConfig({
           }
         ]
       }
+    }
     })
   ],
+build: {
+  rollupOptions: {
+    output: {
+      manualChunks: {
+        vendor: ['react', 'react-dom', 'framer-motion', 'lucide-react', 'i18next', 'react-i18next'],
+          firebase: ['firebase/app', 'firebase/firestore', 'firebase/auth', 'firebase/analytics'],
+        }
+    }
+  }
+}
 })
