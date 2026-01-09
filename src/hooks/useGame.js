@@ -11,19 +11,28 @@ import {
     createInitialBoard,
 } from '../utils/quantumChess';
 import { makeAIMove as getBestAIMove } from '../utils/aiLogic';
+import { audioSys } from '../utils/audioSys';
 
 export function useGame(roomInfo, user) {
     const [gameState, setGameState] = useState(null);
     const [selectedPiece, setSelectedPiece] = useState(null);
     const [validMoves, setValidMoves] = useState([]);
-    const [myColor, setMyColor] = useState(null);
-    const [isMyTurn, setIsMyTurn] = useState(false);
+    const [myColor, setMyColor] = useState('white'); // 'white' or 'black'
+    const [isMyTurn, setIsMyTurn] = useState(true);
     const [error, setError] = useState(null);
     const [lastMove, setLastMove] = useState(null);
-    const [whiteTime, setWhiteTime] = useState(null);
-    const [blackTime, setBlackTime] = useState(null);
+    const [whiteTime, setWhiteTime] = useState(600);
+    const [blackTime, setBlackTime] = useState(600);
     const unsubscribeRef = useRef(null);
     const timerRef = useRef(null);
+    const lastTimeRef = useRef(Date.now());
+
+    // Initialize audio on first interaction
+    useEffect(() => {
+        const initAudio = () => audioSys.init();
+        window.addEventListener('click', initAudio, { once: true });
+        return () => window.removeEventListener('click', initAudio);
+    }, []);
 
     // Initialize game state
     useEffect(() => {
@@ -260,11 +269,32 @@ export function useGame(roomInfo, user) {
                         gameOver: winner,
                     });
                     setIsMyTurn(true);
+
+                    // Play sound based on move type
+                    if (result.capturedPiece) {
+                        audioSys.playCapture();
+                    } else {
+                        audioSys.playMove();
+                    }
+
+                    // Check win condition
+                    if (winner) {
+                        if (winner === 'DRAW') {
+                            audioSys.playDefeat();
+                        } else if ((winner === 'WHITE' && myColor === 'white') || (winner === 'BLACK' && myColor === 'black')) {
+                            audioSys.playVictory();
+                        } else {
+                            audioSys.playDefeat();
+                        }
+                    } else if (isKingInCheck(result.board, 0)) { // 0 for white's turn after AI move
+                        audioSys.playCheck();
+                    }
+
                     return;
                 }
             }
         }
-    }, []);
+    }, [myColor]);
 
     // Resign game
     const resign = useCallback(async () => {
@@ -274,6 +304,7 @@ export function useGame(roomInfo, user) {
 
         if (roomInfo?.isLocal) {
             setGameState({ ...gameState, status: 'finished', gameOver: winner });
+            audioSys.playDefeat();
         } else if (isFirebaseConfigured && db) {
             try {
                 const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', roomInfo.id);
@@ -282,6 +313,7 @@ export function useGame(roomInfo, user) {
                     gameOver: winner,
                     updatedAt: serverTimestamp(),
                 });
+                audioSys.playDefeat();
             } catch (e) {
                 setError(e.message);
             }

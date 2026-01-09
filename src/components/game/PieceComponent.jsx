@@ -3,6 +3,7 @@
  * Renders a chess piece with quantum superposition visualization
  */
 import React from 'react';
+import { motion } from 'framer-motion';
 import { SYMBOLS } from '../../utils/quantumChess';
 
 function PieceComponent({ piece }) {
@@ -12,9 +13,14 @@ function PieceComponent({ piece }) {
     if (isConfirmed) {
         // Confirmed piece - show icon
         return (
-            <span className={`chess-piece ${teamClass}`}>
+            <motion.span
+                className={`chess-piece ${teamClass}`}
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ type: "spring", stiffness: 300, damping: 20 }}
+            >
                 {SYMBOLS[piece.possibilities[0]]}
-            </span>
+            </motion.span>
         );
     }
 
@@ -23,9 +29,18 @@ function PieceComponent({ piece }) {
     const radius = count <= 3 ? 10 : count <= 5 ? 12 : 14;
 
     return (
-        <div className={`quantum-orb-container ${teamClass}`}>
+        <motion.div
+            className={`quantum-orb-container ${teamClass}`}
+            initial={{ scale: 0, rotate: -180 }}
+            animate={{ scale: 1, rotate: 0 }}
+            transition={{ duration: 0.5, type: "spring" }}
+        >
             {/* Orbiting possibilities */}
-            <div className="possibilities-orbit">
+            <motion.div
+                className="possibilities-orbit"
+                animate={{ rotate: 360 }}
+                transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+            >
                 {piece.possibilities.map((type, idx) => {
                     const angle = (idx / count) * 2 * Math.PI - Math.PI / 2;
                     const x = Math.cos(angle) * radius;
@@ -42,11 +57,11 @@ function PieceComponent({ piece }) {
                         </span>
                     );
                 })}
-            </div>
+            </motion.div>
             {/* Center energy core */}
             <div className={`quantum-core ${teamClass}`} />
             <span className="possibility-count">{count}</span>
-        </div>
+        </motion.div>
     );
 }
 
