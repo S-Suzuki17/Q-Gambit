@@ -4,8 +4,10 @@
  */
 import React from 'react';
 import { RotateCcw } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 function GameOverModal({ winner, myColor, onPlayAgain, onExit }) {
+    const { t } = useTranslation();
     const isVictory = (winner === 'WHITE' && myColor === 'white') ||
         (winner === 'BLACK' && myColor === 'black');
 
@@ -16,18 +18,18 @@ function GameOverModal({ winner, myColor, onPlayAgain, onExit }) {
         <div className="game-over-modal">
             <div className="game-over-content">
                 <div className={`game-over-title ${isVictory ? 'victory' : 'defeat'}`}>
-                    {isVictory ? '🏆 VICTORY' : '💀 DEFEAT'}
+                    {isVictory ? `🏆 ${t('game.victory')}` : `💀 ${t('game.defeat')}`}
                 </div>
                 <p className="game-over-message">
-                    {winnerDisplay} wins by King capture
+                    {t('game.wins_by_capture', { winner: winnerDisplay })}
                 </p>
                 <div className="game-over-actions">
                     <button className="btn btn-primary" onClick={onPlayAgain}>
                         <RotateCcw size={16} className="btn-icon" />
-                        Play Again
+                        {t('game.play_again')}
                     </button>
                     <button className="btn btn-secondary" onClick={onExit}>
-                        Exit
+                        {t('game.exit')}
                     </button>
                 </div>
             </div>

@@ -1,0 +1,85 @@
+{
+    "app": {
+        "title": "Q-Gambit",
+        "subtitle": "Quantum Chess"
+    },
+    "nav": {
+        "lobby": "Lobby",
+        "battle": "Battle",
+        "profile": "Profile"
+    },
+    "lobby": {
+        "daily_matches": "Daily Matches",
+        "free_games_left": "{{count}} free games left today",
+        "start_match": "Start Match",
+        "vs_ai": "VS AI",
+        "rapid": "Rapid",
+        "blitz": "Blitz",
+        "speed": "Speed",
+        "how_to_play": "How to Play",
+        "watch_ad": "Watch Ad for +1 Game"
+    },
+    "game": {
+        "your_turn": "YOUR TURN",
+        "opponent_turn": "OPPONENT'S TURN",
+        "white": "White",
+        "black": "Black",
+        "cyan": "Cyan",
+        "rose": "Rose",
+        "moves": "Moves: {{count}}",
+        "check": "CHECK!",
+        "checkmate": "CHECKMATE!",
+        "stalemate": "STALEMATE",
+        "draw": "DRAW",
+        "resign": "Resign",
+        "game_over": "Game Over",
+        "winner": "{{winner}} Wins!",
+        "white_wins": "White Wins!",
+        "black_wins": "Black Wins!",
+        "return_to_lobby": "Return to Lobby",
+        "superposition": "Superposition ({{count}} states)",
+        "possibilities": "Possibilities",
+        "you": "YOU",
+        "opponent": "OPP",
+        "confirmed": "Confirmed: {{piece}}",
+        "resign_confirm_title": "Resign Game?",
+        "resign_confirm_message": "You will lose this match.",
+        "cancel": "Cancel"
+    },
+    "profile": {
+        "player_profile": "Player Profile",
+        "rating": "Rating",
+        "rank": "Rank",
+        "games_played": "Games Played",
+        "win_rate": "Win Rate",
+        "match_history": "Match History",
+        "victory": "VICTORY",
+        "defeat": "DEFEAT",
+        "ranking": "Ranking",
+        "wins": "Wins",
+        "top_10": "Top 10 Players",
+        "recent_matches": "Recent Matches",
+        "achievements": "Achievements",
+        "detailed_stats": "Detailed Stats",
+        "white_win_rate": "White Win Rate",
+        "black_win_rate": "Black Win Rate",
+        "longest_streak": "Longest Streak",
+        "games_this_week": "Games This Week",
+        "game_records": "Game Records",
+        "records_note": "* Records are deleted after {{days}} days"
+    },
+    "ad": {
+        "daily_limit_reached": "Daily Limit Reached",
+        "watch_message": "Watch an ad to play <1>one more game</1>",
+        "later": "Later",
+        "loading": "Loading...",
+        "watch_ad": "Watch Ad"
+    },
+    "rules": {
+        "title": "Quantum Chess Rules",
+        "superposition": "1. Superposition: Pieces exist in multiple states. Moving 'observes' the piece, collapsing it to a specific type.",
+        "entanglement": "2. Entanglement: Team piece limits are enforced. Confirming one piece may eliminate possibilities for others.",
+        "victory": "3. Victory: Capture the opponent's King. The King must be confirmed to be captured.",
+        "close": "Close"
+    }
+}

@@ -4,15 +4,18 @@
  */
 import React from 'react';
 import { Play, Clock, Zap, Flame, User } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 function HomeTab({ onQuickMatch, remainingFreeGames, freeGamesPerDay, onlineCount }) {
+    const { t } = useTranslation();
+
     return (
         <div className="animate-slide-up home-tab">
             {/* Daily Limit Banner */}
             <div className={`daily-limit-banner ${remainingFreeGames > 0 ? 'has-games' : 'no-games'}`}>
                 <div className="daily-limit-left">
                     <Play size={16} color={remainingFreeGames > 0 ? 'var(--cyan-glow)' : 'var(--rose-glow)'} />
-                    <span className="daily-limit-label">本日の無料対局</span>
+                    <span className="daily-limit-label">{t('lobby.daily_matches')}</span>
                 </div>
                 <div className={`daily-limit-count ${remainingFreeGames > 0 ? 'has-games' : 'no-games'}`}>
                     <span>{remainingFreeGames}</span>
@@ -21,7 +24,7 @@ function HomeTab({ onQuickMatch, remainingFreeGames, freeGamesPerDay, onlineCoun
             </div>
 
             {/* Game Modes */}
-            <h3 className="section-header">START MATCH</h3>
+            <h3 className="section-header">{t('lobby.start_match')}</h3>
             <div className="game-modes-grid">
                 <button
                     onClick={() => onQuickMatch('rapid')}
@@ -29,7 +32,7 @@ function HomeTab({ onQuickMatch, remainingFreeGames, freeGamesPerDay, onlineCoun
                 >
                     <Clock size={24} color="var(--indigo-glow)" />
                     <div className="game-mode-info">
-                        <span className="game-mode-name">RAPID</span>
+                        <span className="game-mode-name">{t('lobby.rapid')}</span>
                         <span className="game-mode-time">10 min</span>
                     </div>
                 </button>
@@ -40,7 +43,7 @@ function HomeTab({ onQuickMatch, remainingFreeGames, freeGamesPerDay, onlineCoun
                 >
                     <Zap size={24} color="var(--cyan-glow)" />
                     <div className="game-mode-info">
-                        <span className="game-mode-name">BLITZ</span>
+                        <span className="game-mode-name">{t('lobby.blitz')}</span>
                         <span className="game-mode-time">3 min</span>
                     </div>
                 </button>
@@ -51,7 +54,7 @@ function HomeTab({ onQuickMatch, remainingFreeGames, freeGamesPerDay, onlineCoun
                 >
                     <Flame size={24} color="var(--rose-glow)" />
                     <div className="game-mode-info">
-                        <span className="game-mode-name">SPEED</span>
+                        <span className="game-mode-name">{t('lobby.speed')}</span>
                         <span className="game-mode-time">10s/mv</span>
                     </div>
                 </button>
@@ -64,7 +67,7 @@ function HomeTab({ onQuickMatch, remainingFreeGames, freeGamesPerDay, onlineCoun
                         <User size={24} />
                     </div>
                     <span className="online-count-text">
-                        {onlineCount || 1} オンライン
+                        {t('lobby.online_count', { count: onlineCount || 1 })}
                     </span>
                 </button>
             </div>

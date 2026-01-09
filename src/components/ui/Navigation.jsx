@@ -3,33 +3,37 @@
  * Bottom tab navigation
  */
 import React from 'react';
-import { Home, Sword, Trophy } from 'lucide-react';
+import { Home, Swords, User } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
-function Navigation({ activeTab, onTabChange }) {
-    const tabs = [
-        { id: 'home', icon: Home, label: 'Lobby' },
-        { id: 'play', icon: Sword, label: 'Battle' },
-        { id: 'profile', icon: Trophy, label: 'Rank' },
-    ];
+const Navigation = ({ activeTab, setActiveTab }) => {
+    const { t } = useTranslation();
 
     return (
-        <nav className="tab-nav">
-            {tabs.map(tab => (
-                <button
-                    key={tab.id}
-                    className={`tab-btn ${activeTab === tab.id ? 'active' : ''}`}
-                    onClick={() => onTabChange(tab.id)}
-                >
-                    <tab.icon
-                        size={22}
-                        fill={activeTab === tab.id ? 'currentColor' : 'none'}
-                        strokeWidth={2.5}
-                    />
-                    <span className="tab-label">{tab.label}</span>
-                </button>
-            ))}
+        <nav className="bottom-nav">
+            <button
+                className={`nav-btn ${activeTab === 'home' ? 'active' : ''}`}
+                onClick={() => setActiveTab('home')}
+            >
+                <Home size={24} />
+                <span>{t('nav.lobby')}</span>
+            </button>
+            <button
+                className={`nav-btn ${activeTab === 'battle' ? 'active' : ''}`}
+                onClick={() => setActiveTab('battle')}
+            >
+                <Swords size={24} />
+                <span>{t('nav.battle')}</span>
+            </button>
+            <button
+                className={`nav-btn ${activeTab === 'profile' ? 'active' : ''}`}
+                onClick={() => setActiveTab('profile')}
+            >
+                <User size={24} />
+                <span>{t('nav.profile')}</span>
+            </button>
         </nav>
     );
-}
+};
 
 export default Navigation;

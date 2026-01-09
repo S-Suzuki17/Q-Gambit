@@ -4,6 +4,7 @@
  */
 import React from 'react';
 import { Trophy, User, Loader2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { getRatingTier } from '../../utils/rating';
 import { MAX_VISIBLE_HISTORY, MAX_VISIBLE_RECORDS } from '../../utils/constants';
 
@@ -19,6 +20,7 @@ function ProfileTab({
     gameRecords,
     retentionDays
 }) {
+    const { t } = useTranslation();
     const tier = profile ? getRatingTier(profile.rating) : null;
     const winRate = profile && profile.gamesPlayed > 0
         ? Math.round((profile.wins / profile.gamesPlayed) * 100)
@@ -26,7 +28,7 @@ function ProfileTab({
 
     return (
         <div className="animate-slide-up profile-tab">
-            <h2 className="profile-title">ランキング</h2>
+            <h2 className="profile-title">{t('profile.ranking')}</h2>
 
             {/* My Rank Card */}
             <div className="card profile-rank-card">
@@ -50,20 +52,20 @@ function ProfileTab({
             <div className="stats-grid">
                 <div className="stat-card">
                     <div className="stat-value">{profile?.wins || 0}</div>
-                    <div className="stat-label">勝利</div>
+                    <div className="stat-label">{t('profile.wins')}</div>
                 </div>
                 <div className="stat-card">
                     <div className="stat-value">{winRate}%</div>
-                    <div className="stat-label">勝率</div>
+                    <div className="stat-label">{t('profile.win_rate')}</div>
                 </div>
                 <div className="stat-card">
                     <div className="stat-value">{profile?.rating || 1500}</div>
-                    <div className="stat-label">レート</div>
+                    <div className="stat-label">{t('profile.rating')}</div>
                 </div>
             </div>
 
             {/* Leaderboard */}
-            <h3 className="section-header section-header-top">トップ 10 プレイヤー</h3>
+            <h3 className="section-header section-header-top">{t('profile.top_10')}</h3>
             {leaderboardLoading ? (
                 <div className="loading-container">
                     <Loader2 size={24} className="animate-spin loading-icon" />
@@ -93,7 +95,7 @@ function ProfileTab({
             {/* Match History */}
             {matchHistory && matchHistory.length > 0 && (
                 <>
-                    <h3 className="section-header section-header-top">最近の対局</h3>
+                    <h3 className="section-header section-header-top">{t('profile.recent_matches')}</h3>
                     <div className="match-history-list">
                         {matchHistory.slice(0, MAX_VISIBLE_HISTORY).map((match, i) => (
                             <div key={i} className="friend-item">
@@ -113,7 +115,7 @@ function ProfileTab({
             {/* Achievements */}
             {achievements && achievements.length > 0 && (
                 <>
-                    <h3 className="section-header section-header-top">獲得バッジ</h3>
+                    <h3 className="section-header section-header-top">{t('profile.achievements')}</h3>
                     <div className="achievements-grid">
                         {achievements.map((achievement) => (
                             <div
@@ -132,22 +134,22 @@ function ProfileTab({
             {/* Detailed Stats */}
             {detailedStats && (
                 <>
-                    <h3 className="section-header section-header-top">詳細統計</h3>
+                    <h3 className="section-header section-header-top">{t('profile.detailed_stats')}</h3>
                     <div className="detailed-stats-grid">
                         <div className="stat-card stat-card-sm">
-                            <div className="stat-label-sm">先手（白）勝率</div>
+                            <div className="stat-label-sm">{t('profile.white_win_rate')}</div>
                             <div className="stat-value-colored cyan">{whiteWinRate}%</div>
                         </div>
                         <div className="stat-card stat-card-sm">
-                            <div className="stat-label-sm">後手（黒）勝率</div>
+                            <div className="stat-label-sm">{t('profile.black_win_rate')}</div>
                             <div className="stat-value-colored rose">{blackWinRate}%</div>
                         </div>
                         <div className="stat-card stat-card-sm">
-                            <div className="stat-label-sm">最長連勝</div>
+                            <div className="stat-label-sm">{t('profile.longest_streak')}</div>
                             <div className="stat-value-colored amber">{detailedStats.longestWinStreak || 0}</div>
                         </div>
                         <div className="stat-card stat-card-sm">
-                            <div className="stat-label-sm">今週のプレイ</div>
+                            <div className="stat-label-sm">{t('profile.games_this_week')}</div>
                             <div className="stat-value-colored indigo">{detailedStats.gamesThisWeek || 0}</div>
                         </div>
                     </div>
@@ -157,9 +159,9 @@ function ProfileTab({
             {/* Game Records */}
             {gameRecords && gameRecords.length > 0 && (
                 <>
-                    <h3 className="section-header section-header-top">棋譜記録</h3>
+                    <h3 className="section-header section-header-top">{t('profile.game_records')}</h3>
                     <p className="game-records-note">
-                        ※ 棋譜は{retentionDays || 90}日後に自動的に削除されます
+                        {t('profile.records_note', { days: retentionDays || 90 })}
                     </p>
                     <div className="game-records-list">
                         {gameRecords.slice(0, MAX_VISIBLE_RECORDS).map((record, i) => (

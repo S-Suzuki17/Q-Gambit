@@ -4,8 +4,11 @@
  */
 import React from 'react';
 import { Play, Loader2 } from 'lucide-react';
+import { useTranslation, Trans } from 'react-i18next';
 
 function AdGateModal({ onWatchAd, onClose, isLoading }) {
+    const { t } = useTranslation();
+
     return (
         <div className="game-over-modal">
             <div className="card animate-zoom-in ad-gate-content">
@@ -13,13 +16,15 @@ function AdGateModal({ onWatchAd, onClose, isLoading }) {
                     <Play size={28} color="var(--amber-glow)" />
                 </div>
 
-                <h3 className="ad-gate-title">本日の無料対局終了</h3>
+                <h3 className="ad-gate-title">{t('ad.daily_limit_reached')}</h3>
 
                 <p className="ad-gate-message">
-                    広告を見ると、
-                    <br />
-                    <span className="ad-gate-highlight">もう1局</span>
-                    プレイできます
+                    <Trans i18nKey="ad.watch_message">
+                        広告を見ると、
+                        <br />
+                        <span className="ad-gate-highlight">もう1局</span>
+                        プレイできます
+                    </Trans>
                 </p>
 
                 <div className="ad-gate-actions">
@@ -28,7 +33,7 @@ function AdGateModal({ onWatchAd, onClose, isLoading }) {
                         onClick={onClose}
                         disabled={isLoading}
                     >
-                        あとで
+                        {t('ad.later')}
                     </button>
                     <button
                         className="btn btn-primary ad-gate-watch-btn"
@@ -38,12 +43,12 @@ function AdGateModal({ onWatchAd, onClose, isLoading }) {
                         {isLoading ? (
                             <>
                                 <Loader2 size={16} className="animate-spin" />
-                                <span>読込中...</span>
+                                <span>{t('ad.loading')}</span>
                             </>
                         ) : (
                             <>
                                 <Play size={16} fill="currentColor" />
-                                <span>広告を見る</span>
+                                <span>{t('ad.watch_ad')}</span>
                             </>
                         )}
                     </button>
