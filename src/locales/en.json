@@ -1,6 +1,6 @@
 {
     "app": {
-        "title": "Q-Gambit",
+        "title": "Quess",
         "subtitle": "Quantum Chess"
     },
     "nav": {
@@ -17,7 +17,9 @@
         "blitz": "Blitz",
         "speed": "Speed",
         "how_to_play": "How to Play",
-        "watch_ad": "Watch Ad for +1 Game"
+        "inventory": "Inventory",
+        "watch_ad": "Watch Ad for +1 Game",
+        "online_count": "{{count}} Online"
     },
     "game": {
         "your_turn": "YOUR TURN",
@@ -44,7 +46,10 @@
         "confirmed": "Confirmed: {{piece}}",
         "resign_confirm_title": "Resign Game?",
         "resign_confirm_message": "You will lose this match.",
-        "cancel": "Cancel"
+        "cancel": "Cancel",
+        "share": "Share Result",
+        "share_message_win": "I just defeated the AI in Q-Gambit! 🚀",
+        "share_message_loss": "Defeated by AI in Q-Gambit 🤖"
     },
     "profile": {
         "player_profile": "Player Profile",
@@ -77,9 +82,52 @@
     },
     "rules": {
         "title": "Quantum Chess Rules",
-        "superposition": "1. Superposition: Pieces exist in multiple states. Moving 'observes' the piece, collapsing it to a specific type.",
-        "entanglement": "2. Entanglement: Team piece limits are enforced. Confirming one piece may eliminate possibilities for others.",
-        "victory": "3. Victory: Capture the opponent's King. The King must be confirmed to be captured.",
+        "superposition_title": "Superposition",
+        "superposition_content": "Pieces exist in multiple states simultaneously. Moving a piece 'observes' it, collapsing it to a specific type based on probability.",
+        "entanglement_title": "Entanglement",
+        "entanglement_content": "Team piece limits are enforced (e.g., max 2 Knights). Confirming one piece as a Knight may eliminate that possibility for others.",
+        "victory_title": "Victory Condition",
+        "victory_content": "Capture the opponent's King. The King must be confirmed (collapsed) to be captured. You cannot capture a superposition King.",
+        "close": "Got it!"
+    },
+    "settings": {
+        "title": "Settings",
+        "audio": "Audio",
+        "master_volume": "Master Volume",
+        "sfx_volume": "SFX Volume",
+        "graphics": "Graphics",
+        "high_desc": "High quality effects (Particles enabled)",
+        "low_desc": "Performance mode (Particles disabled)",
         "close": "Close"
+    },
+    "bonus": {
+        "dailyLogin": "Daily Login Bonus",
+        "currentStreak": "Current Streak",
+        "days": "DAYS",
+        "comeBackTomorrow": "Come back tomorrow for more!",
+        "claim": "CLAIM REWARD"
+    },
+    "inventory": {
+        "title": "Piece Inventory",
+        "hint": "Synthesize pieces to get more value! Higher ranks give exponentially more free games."
+    },
+    "auth": {
+        "title": "Account Linking",
+        "link_description": "Link your Google account to sync your data across devices.",
+        "login_description": "Sign in with your Google account.",
+        "link_google": "Link Google Account",
+        "sign_in_google": "Sign in with Google",
+        "guest_note": "* You can still play as a guest without linking.",
+        "login": "Login",
+        "logout": "Logout",
+        "guest": "Guest",
+        "guest_login": "Play as Guest"
+    },
+    "leaderboard": {
+        "title": "Quantum Ranking",
+        "rank": "Rank",
+        "player": "Player",
+        "rating": "Rating",
+        "tier": "Tier"
     }
 }

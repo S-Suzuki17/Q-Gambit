@@ -16,18 +16,20 @@ import { useMatchHistory } from './hooks/useMatchHistory';
 import { useAchievements } from './hooks/useAchievements';
 import { useDetailedStats } from './hooks/useDetailedStats';
 import { useGameRecord } from './hooks/useGameRecord';
+import { useDailyLogin } from './hooks/useDailyLogin';
+import { useInventory } from './hooks/useInventory';
 
 // Components
 import { Header, Navigation, MatchmakingOverlay } from './components/ui';
 import { HomeTab, ProfileTab } from './components/tabs';
-import { AdGateModal } from './components/modals';
+import { AdGateModal, LoginBonusModal, InventoryModal, AuthModal, LeaderboardModal } from './components/modals';
 import GameScreen from './screens/GameScreen';
 
 import './index.css';
 
 // ===== Main App Component =====
 export default function App() {
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, signInWithGoogle, linkWithGoogle, signOut, isAnonymous } = useAuth();
   const { profile, rating, tier, loading: profileLoading } = useUserProfile(user);
   const {
     isSearching,
@@ -39,14 +41,20 @@ export default function App() {
     resetMatch
   } = useMatchmaking(user, rating);
 
-  // Daily play limit
+  // Daily Play Limit (and persistent tickets)
   const {
     canPlayFree,
     remainingFreeGames,
-    freeGamesPerDay,
+    bonusTickets,
     incrementPlayCount,
     grantBonusGame,
   } = useDailyPlayLimit();
+
+  // Inventory & Rewards
+  const { inventory, addPiece, synthesize, exchange, rates: exchangeRates } = useInventory(grantBonusGame);
+
+  // Daily Login Bonus
+  const { streak, showLoginBonus, claimBonus } = useDailyLogin();
 
   // Ads
   const { showRewardedAd, isLoading: isAdLoading } = useRewardedAd();
@@ -55,6 +63,9 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('home');
   const [currentRoom, setCurrentRoom] = useState(null);
   const [showAdGate, setShowAdGate] = useState(false);
+  const [showInventory, setShowInventory] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showLeaderboardModal, setShowLeaderboardModal] = useState(false);
   const [pendingMode, setPendingMode] = useState(null);
 
   // Leaderboard
@@ -117,9 +128,13 @@ export default function App() {
 
   // Handle tab change
   const handleTabChange = useCallback((tabId) => {
-    setActiveTab(tabId);
     if (tabId === 'play') {
       handlePlayRequest();
+      // Don't switch tab to 'play', keep current or go to home?
+      // Since Home has the lobby, staying on Home/going to Home makes sense for matching.
+      setActiveTab('home');
+    } else {
+      setActiveTab(tabId);
     }
   }, [handlePlayRequest]);
 
@@ -151,9 +166,10 @@ export default function App() {
       {/* Header */}
       <Header
         user={user}
-        rating={rating}
-        tier={tier}
-        gamesPlayed={profile?.gamesPlayed}
+        userData={profile}
+        handleLogout={signOut}
+        setShowAuthModal={setShowAuthModal}
+        setShowLeaderboardModal={setShowLeaderboardModal}
       />
 
       {/* Main Content */}
@@ -162,7 +178,8 @@ export default function App() {
           <HomeTab
             onQuickMatch={handlePlayRequest}
             remainingFreeGames={remainingFreeGames}
-            freeGamesPerDay={freeGamesPerDay}
+            bonusTickets={bonusTickets}
+            onOpenInventory={() => setShowInventory(true)}
             onlineCount={onlineCount}
           />
         )}
@@ -201,6 +218,41 @@ export default function App() {
           onWatchAd={handleWatchAd}
           onClose={() => setShowAdGate(false)}
           isLoading={isAdLoading}
+        />
+      )}
+
+      {/* Daily Login Bonus Modal */}
+      {showLoginBonus && (
+        <LoginBonusModal streak={streak} onClaim={() => claimBonus(() => addPiece('P', 1))} />
+      )}
+
+      {/* Inventory Modal */}
+      {showInventory && (
+        <InventoryModal
+          inventory={inventory}
+          rates={exchangeRates}
+          onSynthesize={synthesize}
+          onExchange={exchange}
+          onClose={() => setShowInventory(false)}
+        />
+      )}
+
+      {/* Auth Modal */}
+      {showAuthModal && (
+        <AuthModal
+          onSignInWithGoogle={signInWithGoogle}
+          onLinkWithGoogle={linkWithGoogle}
+          onSignInGuest={() => setShowAuthModal(false)} // Already authed as guest by default or handled by useAuth
+          isAnonymous={isAnonymous}
+          onClose={() => setShowAuthModal(false)}
+        />
+      )}
+
+      {/* Leaderboard Modal */}
+      {showLeaderboardModal && (
+        <LeaderboardModal
+          user={user}
+          onClose={() => setShowLeaderboardModal(false)}
         />
       )}
     </div>

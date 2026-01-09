@@ -1,7 +1,5 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-
-// https://vite.dev/config/
 import { VitePWA } from 'vite-plugin-pwa'
 
 // https://vite.dev/config/
@@ -40,17 +38,9 @@ export default defineConfig({
           }
         ]
       }
-    }
     })
   ],
-build: {
-  rollupOptions: {
-    output: {
-      manualChunks: {
-        vendor: ['react', 'react-dom', 'framer-motion', 'lucide-react', 'i18next', 'react-i18next'],
-          firebase: ['firebase/app', 'firebase/firestore', 'firebase/auth', 'firebase/analytics'],
-        }
-    }
+  build: {
+    chunkSizeWarningLimit: 1000,
   }
-}
 })

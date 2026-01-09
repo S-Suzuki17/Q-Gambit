@@ -20,10 +20,7 @@ function AdGateModal({ onWatchAd, onClose, isLoading }) {
 
                 <p className="ad-gate-message">
                     <Trans i18nKey="ad.watch_message">
-                        広告を見ると、
-                        <br />
-                        <span className="ad-gate-highlight">もう1局</span>
-                        プレイできます
+                        Watch an ad to play <span className="ad-gate-highlight">one more game</span>
                     </Trans>
                 </p>
 

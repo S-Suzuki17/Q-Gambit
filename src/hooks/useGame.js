@@ -3,15 +3,20 @@
  */
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { db, isFirebaseConfigured, appId } from '../config/firebase';
-import { doc, onSnapshot, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, onSnapshot, updateDoc, serverTimestamp, runTransaction, getDoc } from 'firebase/firestore';
 import {
     attemptMove,
     getValidMoves,
     checkGameOver,
     createInitialBoard,
+    isKingInCheck,
 } from '../utils/quantumChess';
 import { makeAIMove as getBestAIMove } from '../utils/aiLogic';
 import { audioSys } from '../utils/audioSys';
+import { fxSys } from '../utils/fxSys';
+import { calculateNewRating } from '../utils/rating';
+
+
 
 export function useGame(roomInfo, user) {
     const [gameState, setGameState] = useState(null);
@@ -95,6 +100,14 @@ export function useGame(roomInfo, user) {
             if (data.whiteTime !== undefined) setWhiteTime(data.whiteTime);
             if (data.blackTime !== undefined) setBlackTime(data.blackTime);
 
+            // Sync last move for visualization
+            if (data.history && data.history.length > 0) {
+                const last = data.history[data.history.length - 1];
+                setLastMove({ from: last.from, to: last.to });
+            } else {
+                setLastMove(null);
+            }
+
         }, (err) => {
             console.error('[Game] Subscription error:', err);
             setError(err.message);
@@ -107,7 +120,117 @@ export function useGame(roomInfo, user) {
         };
     }, [roomInfo, user]);
 
-    // Execute a move (defined first so other callbacks can reference it)
+    // Handle Game End (Transaction for Safety)
+    const handleGameEnd = useCallback(async (winner, reason, finalState = null) => {
+        if (roomInfo?.isLocal || roomInfo?.isAiMatch) {
+            setGameState(prev => ({
+                ...prev,
+                ...(finalState || {}),
+                status: 'finished',
+                gameOver: winner,
+                winReason: reason
+            }));
+            if (winner === 'DRAW') audioSys.playDefeat(); // Re-use defeat sound for draw locally
+            else if ((winner === 'WHITE' && myColor === 'white') || (winner === 'BLACK' && myColor === 'black')) audioSys.playVictory();
+            else audioSys.playDefeat();
+            return;
+        }
+
+        if (isFirebaseConfigured && db) {
+            try {
+                await runTransaction(db, async (transaction) => {
+                    // 1. Get fresh room data
+                    const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', roomInfo.id);
+                    const roomDoc = await transaction.get(roomRef);
+                    if (!roomDoc.exists()) throw new Error("Room does not exist!");
+
+                    const roomData = roomDoc.data();
+                    if (roomData.status === 'finished') return; // Already finished
+
+                    // 2. Calculate Stats
+                    let whiteRatingIdx = roomData.ratings?.white || 1500;
+                    let blackRatingIdx = roomData.ratings?.black || 1500;
+
+                    // Score: WhiteWin=1, Draw=0.5, BlackWin=0
+                    // But our calculateElo assumes Player A vs Player B
+                    // Let A=White, B=Black
+                    const scoreA = winner === 'WHITE' ? 1 : winner === 'DRAW' ? 0.5 : 0;
+
+                    // Calculate ratings
+                    const whiteResult = calculateNewRating(whiteRatingIdx, blackRatingIdx, scoreA, 0);
+                    const blackResult = calculateNewRating(blackRatingIdx, whiteRatingIdx, 1 - scoreA, 0);
+
+                    // 3. Update Room
+                    const updateData = {
+                        status: 'finished',
+                        gameOver: winner,
+                        winReason: reason,
+                        updatedAt: serverTimestamp(),
+                        finalRatings: {
+                            white: whiteResult.newRating,
+                            black: blackResult.newRating
+                        },
+                        ratingChange: {
+                            white: whiteResult.change,
+                            black: blackResult.change
+                        }
+                    };
+
+                    if (finalState) {
+                        updateData.pieces = finalState.pieces;
+                        updateData.board = finalState.board;
+                        updateData.turn = finalState.turn;
+                        updateData.history = finalState.history;
+                    }
+
+                    transaction.update(roomRef, updateData);
+
+                    // 4. Update Player Profiles
+                    const whiteProfileRef = doc(db, 'artifacts', appId, 'public', 'data', 'profiles', roomData.players.white);
+                    const blackProfileRef = doc(db, 'artifacts', appId, 'public', 'data', 'profiles', roomData.players.black);
+
+                    // We use set(..., {merge: true}) alias logic by reading first or just update if exists
+                    // Transaction requires reads before writes usually, but for profiles we might just want to update
+                    // Let's read them to increments stats
+                    const whiteDoc = await transaction.get(whiteProfileRef);
+                    const blackDoc = await transaction.get(blackProfileRef);
+
+                    if (whiteDoc.exists()) {
+                        const d = whiteDoc.data();
+                        transaction.update(whiteProfileRef, {
+                            rating: whiteResult.newRating,
+                            gamesPlayed: (d.gamesPlayed || 0) + 1,
+                            wins: (d.wins || 0) + (winner === 'WHITE' ? 1 : 0),
+                            losses: (d.losses || 0) + (winner === 'BLACK' ? 1 : 0),
+                            draws: (d.draws || 0) + (winner === 'DRAW' ? 1 : 0)
+                        });
+                    }
+
+                    if (blackDoc.exists()) {
+                        const d = blackDoc.data();
+                        transaction.update(blackProfileRef, {
+                            rating: blackResult.newRating,
+                            gamesPlayed: (d.gamesPlayed || 0) + 1,
+                            wins: (d.wins || 0) + (winner === 'BLACK' ? 1 : 0),
+                            losses: (d.losses || 0) + (winner === 'WHITE' ? 1 : 0),
+                            draws: (d.draws || 0) + (winner === 'DRAW' ? 1 : 0)
+                        });
+                    }
+
+                    // Also update matchmaking doc to free them? 
+                    // Matchmaking docs are deleted by useMatchmaking cleanup, but profiles are permanent.
+                });
+
+                if (winner === 'DRAW') audioSys.playDefeat();
+                else if ((winner === 'WHITE' && myColor === 'white') || (winner === 'BLACK' && myColor === 'black')) audioSys.playVictory();
+                else audioSys.playDefeat();
+
+            } catch (e) {
+                console.error('[Game] Game End Transaction failed:', e);
+                setError(e.message);
+            }
+        }
+    }, [roomInfo, myColor, appId]);
     const makeMove = useCallback(async (toX, toY, explicitPiece = null) => {
         const targetPiece = explicitPiece || selectedPiece;
         if (!targetPiece || !gameState) return;
@@ -121,12 +244,26 @@ export function useGame(roomInfo, user) {
         );
 
         if (!result.success) {
-            console.log('[Game] Invalid move:', result.message);
+            // console.log('[Game] Invalid move:', result.message);
             return;
         }
 
         // Check for game over
         const winner = checkGameOver(result.pieces);
+
+        // FX & Audio Triggers
+        const moveColor = gameState.turn === 0 ? 'var(--cyan-glow)' : 'var(--rose-glow)'; // Player who JUST moved
+        if (result.capturedPiece) {
+            audioSys.playCapture();
+            fxSys.explode(toX, toY, moveColor);
+        } else {
+            audioSys.playMove();
+            fxSys.ripple(toX, toY, moveColor);
+        }
+
+        if (isKingInCheck(result.board, result.pieces, gameState.turn === 0 ? 1 : 0)) { // Check against opponent
+            audioSys.playCheck();
+        }
 
         // Calculate new times
         let newWhiteTime = whiteTime;
@@ -183,27 +320,41 @@ export function useGame(roomInfo, user) {
                     (newState.turn === 1 && myColor === 'black');
                 setIsMyTurn(nextIsMyTurn);
             }
+
+            // If game over (Local/AI)
+            if (winner) {
+                handleGameEnd(winner, 'CHECKMATE'); // Local/AI handling inside handleGameEnd
+            }
+
         } else if (isFirebaseConfigured && db) {
-            // Online game - sync to Firestore
-            try {
-                const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', roomInfo.id);
-                await updateDoc(roomRef, {
-                    pieces: newState.pieces,
-                    board: newState.board,
-                    turn: newState.turn,
-                    whiteTime: newState.whiteTime,
-                    blackTime: newState.blackTime,
-                    history: newState.history,
-                    status: newState.status,
-                    gameOver: newState.gameOver,
-                    updatedAt: serverTimestamp(),
-                });
-            } catch (e) {
-                console.error('[Game] Update error:', e);
-                setError(e.message);
+            // Online game
+            if (winner) {
+                // Determine reason (Checkmate or Stalemate/Draw?)
+                // checkGameOver returns WHITE, BLACK, or DRAW
+                const reason = winner === 'DRAW' ? 'STALEMATE' : 'CHECKMATE';
+                handleGameEnd(winner, reason, newState);
+            } else {
+                // Normal Move Update
+                try {
+                    const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', roomInfo.id);
+                    await updateDoc(roomRef, {
+                        pieces: newState.pieces,
+                        board: newState.board,
+                        turn: newState.turn,
+                        whiteTime: newState.whiteTime,
+                        blackTime: newState.blackTime,
+                        history: newState.history,
+                        status: newState.status,
+                        gameOver: newState.gameOver,
+                        updatedAt: serverTimestamp(),
+                    });
+                } catch (e) {
+                    console.error('[Game] Update error:', e);
+                    setError(e.message);
+                }
             }
         }
-    }, [selectedPiece, gameState, roomInfo, whiteTime, blackTime, myColor]);
+    }, [selectedPiece, gameState, roomInfo, whiteTime, blackTime, myColor, handleGameEnd]);
 
     // Handle piece selection (now can reference makeMove)
     const selectPiece = useCallback((piece) => {
@@ -270,11 +421,16 @@ export function useGame(roomInfo, user) {
                     });
                     setIsMyTurn(true);
 
-                    // Play sound based on move type
+
+                    // Play sound & FX based on move type
+                    const moveColor = piece.team === 0 ? 'var(--cyan-glow)' : 'var(--rose-glow)';
+
                     if (result.capturedPiece) {
                         audioSys.playCapture();
+                        fxSys.explode(move.x, move.y, moveColor);
                     } else {
                         audioSys.playMove();
+                        fxSys.ripple(move.x, move.y, moveColor);
                     }
 
                     // Check win condition
@@ -286,7 +442,7 @@ export function useGame(roomInfo, user) {
                         } else {
                             audioSys.playDefeat();
                         }
-                    } else if (isKingInCheck(result.board, 0)) { // 0 for white's turn after AI move
+                    } else if (isKingInCheck(result.board, result.pieces, 0)) { // 0 for white's turn after AI move
                         audioSys.playCheck();
                     }
 
@@ -299,26 +455,9 @@ export function useGame(roomInfo, user) {
     // Resign game
     const resign = useCallback(async () => {
         if (!gameState) return;
-
         const winner = myColor === 'white' ? 'BLACK' : 'WHITE';
-
-        if (roomInfo?.isLocal) {
-            setGameState({ ...gameState, status: 'finished', gameOver: winner });
-            audioSys.playDefeat();
-        } else if (isFirebaseConfigured && db) {
-            try {
-                const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', roomInfo.id);
-                await updateDoc(roomRef, {
-                    status: 'finished',
-                    gameOver: winner,
-                    updatedAt: serverTimestamp(),
-                });
-                audioSys.playDefeat();
-            } catch (e) {
-                setError(e.message);
-            }
-        }
-    }, [gameState, myColor, roomInfo]);
+        await handleGameEnd(winner, 'RESIGNATION');
+    }, [gameState, myColor, handleGameEnd]);
 
     // AI Opponent Logic (Smarter AI for Auto-Match)
     useEffect(() => {
@@ -335,7 +474,7 @@ export function useGame(roomInfo, user) {
                 // Execute move locally using the refactored makeMove
                 makeMove(move.to.x, move.to.y, move.piece);
             } else {
-                console.log('[AI] No moves available');
+                // console.log('[AI] No moves available');
                 // Could force resign or stalemate here
             }
         };
@@ -376,23 +515,8 @@ export function useGame(roomInfo, user) {
     const handleTimeout = useCallback(async (color) => {
         const winner = color === 'white' ? 'BLACK' : 'WHITE';
         const reason = 'TIMEOUT';
-
-        if (roomInfo?.isLocal || roomInfo?.isAiMatch) {
-            setGameState(prev => ({ ...prev, status: 'finished', gameOver: winner, winReason: reason }));
-        } else if (isFirebaseConfigured && db) {
-            try {
-                const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', roomInfo.id);
-                await updateDoc(roomRef, {
-                    status: 'finished',
-                    gameOver: winner,
-                    winReason: reason,
-                    updatedAt: serverTimestamp(),
-                });
-            } catch (e) {
-                console.error('[Game] Timeout update error:', e);
-            }
-        }
-    }, [roomInfo, gameState]);
+        await handleGameEnd(winner, reason);
+    }, [handleGameEnd]);
 
     return {
         gameState,

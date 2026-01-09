@@ -7,7 +7,8 @@ import { Loader2, Flag, Info } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useGame } from '../hooks/useGame';
 import { ChessBoard, TurnIndicator, GameOverModal } from '../components/game';
-import { SYMBOLS } from '../utils/quantumChess';
+import { AnnouncementOverlay } from '../components/game/AnnouncementOverlay';
+import { SYMBOLS, isKingInCheck } from '../utils/quantumChess';
 import { formatTimeSeconds } from '../utils/formatters';
 
 function GameScreen({ roomInfo, user, onExit }) {
@@ -28,6 +29,46 @@ function GameScreen({ roomInfo, user, onExit }) {
 
     const [showResignConfirm, setShowResignConfirm] = useState(false);
 
+    // Announcements Logic
+    const [announcement, setAnnouncement] = React.useState(null);
+
+    React.useEffect(() => {
+        // Initial Match Start
+        setAnnouncement({ message: "MATCH START", subMessage: "QUANTUM REALM", type: "info" });
+        const timer = setTimeout(() => setAnnouncement(null), 2000);
+        return () => clearTimeout(timer);
+    }, []);
+
+    React.useEffect(() => {
+        if (!gameState) return;
+
+        // Check for Game Over first
+        if (gameState.gameOver) {
+            const isWin = (gameState.gameOver === 'WHITE' && myColor === 'white') ||
+                (gameState.gameOver === 'BLACK' && myColor === 'black');
+            if (isWin) {
+                setAnnouncement({ message: "VICTORY", subMessage: "QUANTUM SUPREMACY", type: "success" });
+            } else if (gameState.gameOver === 'DRAW') {
+                setAnnouncement({ message: "DRAW", subMessage: "ENTANGLED STALEMATE", type: "info" });
+            } else {
+                setAnnouncement({ message: "DEFEAT", subMessage: "OBSERVED & COLLAPSED", type: "danger" });
+            }
+            return;
+        }
+
+        // Check for "Check"
+        // We check if the player whose turn it IS, is in check
+        if (isKingInCheck(gameState.board, gameState.pieces, gameState.turn)) {
+            // If it's MY turn and I am in check -> Warning
+            // If it's OPPONENT turn and they are in check -> Good for me (but usually we show 'CHECK' generally)
+
+            // Just show CHECK!
+            setAnnouncement({ message: "CHECK!", type: "warning" });
+            const timer = setTimeout(() => setAnnouncement(null), 1500);
+            return () => clearTimeout(timer);
+        }
+    }, [gameState?.turn, gameState?.gameOver, gameState?.board, gameState?.pieces /* Deep dep might trigger too often, relying on turn change mostly */]);
+
     if (!gameState) {
         return (
             <div className="loading-overlay">
@@ -43,6 +84,11 @@ function GameScreen({ roomInfo, user, onExit }) {
 
     return (
         <div className="game-container">
+            <AnnouncementOverlay
+                message={announcement?.message}
+                subMessage={announcement?.subMessage}
+                type={announcement?.type}
+            />
             {/* Game Header */}
             <div className="game-header">
                 <button onClick={() => setShowResignConfirm(true)} className="resign-btn">

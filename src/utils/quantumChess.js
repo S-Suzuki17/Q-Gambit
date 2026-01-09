@@ -545,3 +545,40 @@ export function checkGameOver(pieces) {
     if (isKingCaptured(pieces, 1)) return 'WHITE';
     return null;
 }
+
+/**
+ * Check if the King of a specific team is in check
+ * @param {(number|null)[]} board - Current board state
+ * @param {Piece[]} pieces - All pieces
+ * @param {number} team - Team to check (0 or 1)
+ * @returns {boolean} True if King is in check
+ */
+export function isKingInCheck(board, pieces, team) {
+    // 1. Find the King
+    // We only consider check if the King is CONFIRMED (1 possibility 'K')
+    // If King is superposed, "check" is ambiguous, so we skip it for simplicity
+    const king = pieces.find(p =>
+        p.team === team &&
+        !p.captured &&
+        p.possibilities.length === 1 &&
+        p.possibilities[0] === 'K'
+    );
+
+    if (!king) return false;
+
+    // 2. Check if any opponent piece can attack the King
+    const opponentTeam = team === 0 ? 1 : 0;
+    const opponentPieces = pieces.filter(p => p.team === opponentTeam && !p.captured);
+
+    for (const piece of opponentPieces) {
+        // We can reuse filterPossibilities to see if moving to King's pos is valid
+        // But we need to know if it's a capture move (King is there, so yes it's occupied)
+        // filterPossibilities defined in this file (hoisted or available in scope)
+        const validTypes = filterPossibilities(piece, king.x, king.y, board, true);
+        if (validTypes.length > 0) {
+            return true;
+        }
+    }
+
+    return false;
+}

@@ -106,7 +106,7 @@ export function useMatchmaking(user, userRating = DEFAULT_RATING) {
 
         // Offline mode - create local AI match
         if (!isFirebaseConfigured) {
-            console.log('[Matchmaking] Offline mode - creating local game');
+            // console.log('[Matchmaking] Offline mode - creating local game');
             setTimeout(() => {
                 const { board, pieces } = createInitialBoard();
                 setMatchedRoom({
@@ -149,7 +149,7 @@ export function useMatchmaking(user, userRating = DEFAULT_RATING) {
 
                 // Fallback to AI if no match found
                 if (elapsed > AI_TIMEOUT_MS) {
-                    console.log('[Matchmaking] Timeout - starting AI match');
+                    // console.log('[Matchmaking] Timeout - starting AI match');
                     cleanup();
                     setIsSearching(false);
 
@@ -230,7 +230,7 @@ export function useMatchmaking(user, userRating = DEFAULT_RATING) {
                         });
                         setIsSearching(false);
 
-                        console.log('[Matchmaking] Joined room:', roomId, 'Rating diff:', bestMatch.diff);
+                        console.log('[Matchmaking] Joined room:', roomId);
                         return true;
                     }
                 }
@@ -253,7 +253,7 @@ export function useMatchmaking(user, userRating = DEFAULT_RATING) {
                 createdAt: serverTimestamp(),
             });
 
-            console.log('[Matchmaking] Added to queue with rating:', currentRating, 'mode:', mode);
+            // console.log('[Matchmaking] Added to queue:', currentRating, mode);
 
             // Listen for match
             unsubscribeRef.current = onSnapshot(matchDocRef.current, async (snap) => {
@@ -265,7 +265,7 @@ export function useMatchmaking(user, userRating = DEFAULT_RATING) {
                     });
                     setIsSearching(false);
                     cleanup();
-                    console.log('[Matchmaking] Matched to room:', data.roomId);
+                    // console.log('[Matchmaking] Matched to room:', data.roomId);
                 }
             });
 

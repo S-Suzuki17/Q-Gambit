@@ -4,7 +4,8 @@
  */
 import React from 'react';
 import PieceComponent from './PieceComponent';
-
+import FXCanvas from './FXCanvas';
+import { SYMBOLS } from '../../utils/quantumChess';
 function ChessBoard({ gameState, selectedPiece, validMoves, lastMove, onSelectPiece, onClickSquare, myColor }) {
     // White is at bottom (rows 0-1 visually at bottom), black at top
     // When playing as white, we DON'T flip (white at bottom)
@@ -57,13 +58,14 @@ function ChessBoard({ gameState, selectedPiece, validMoves, lastMove, onSelectPi
         );
     };
 
-    const squareComponents = React.useMemo(() => {
+    const boardSquares = React.useMemo(() => {
         return Array.from({ length: 64 }, (_, i) => renderSquare(i));
     }, [gameState, selectedPiece, validMoves, lastMove, myColor, isFlipped]); // Dependencies for re-rendering board
 
     return (
-        <div className="chess-board">
-            {squareComponents}
+        <div className="chess-board" style={{ position: 'relative' }}>
+            <FXCanvas />
+            {boardSquares}
         </div>
     );
 }

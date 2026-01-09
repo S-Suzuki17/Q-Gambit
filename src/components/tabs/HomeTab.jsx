@@ -2,25 +2,56 @@
  * HomeTab Component
  * Main lobby screen with game mode selection
  */
-import React from 'react';
-import { Play, Clock, Zap, Flame, User } from 'lucide-react';
+import React, { useState } from 'react';
+import { Play, Clock, Zap, Flame, User, BookOpen } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import RulesModal from '../modals/RulesModal';
 
-function HomeTab({ onQuickMatch, remainingFreeGames, freeGamesPerDay, onlineCount }) {
+function HomeTab({ onQuickMatch, remainingFreeGames, freeGamesPerDay, onlineCount, bonusTickets, onOpenInventory }) {
     const { t } = useTranslation();
+    const [showRules, setShowRules] = useState(false);
 
     return (
         <div className="animate-slide-up home-tab">
             {/* Daily Limit Banner */}
-            <div className={`daily-limit-banner ${remainingFreeGames > 0 ? 'has-games' : 'no-games'}`}>
+            <div className={`daily-limit-banner ${remainingFreeGames > 0 || bonusTickets > 0 ? 'has-games' : 'no-games'}`}>
                 <div className="daily-limit-left">
                     <Play size={16} color={remainingFreeGames > 0 ? 'var(--cyan-glow)' : 'var(--rose-glow)'} />
                     <span className="daily-limit-label">{t('lobby.daily_matches')}</span>
                 </div>
-                <div className={`daily-limit-count ${remainingFreeGames > 0 ? 'has-games' : 'no-games'}`}>
-                    <span>{remainingFreeGames}</span>
-                    <span className="daily-limit-total">/ {freeGamesPerDay}</span>
+                <div className="daily-limit-count-group">
+                    <div className={`daily-limit-count ${remainingFreeGames > 0 ? 'has-games' : 'no-games'}`}>
+                        <span>{remainingFreeGames}</span>
+                        <span className="daily-limit-total">/ {freeGamesPerDay}</span>
+                    </div>
                 </div>
+                {/* Tickets Display */}
+                {bonusTickets > 0 && (
+                    <div className="ticket-badge" title="Free Game Tickets">
+                        <span className="ticket-icon">🎫</span>
+                        <span className="ticket-count">+{bonusTickets}</span>
+                    </div>
+                )}
+            </div>
+
+            <div className="home-action-buttons">
+                {/* How to Play Button */}
+                <button
+                    className="btn btn-secondary home-action-btn"
+                    onClick={() => setShowRules(true)}
+                >
+                    <BookOpen size={18} color="var(--cyan-glow)" />
+                    <span>{t('lobby.how_to_play')}</span>
+                </button>
+
+                {/* Inventory Button */}
+                <button
+                    className="btn btn-secondary home-action-btn"
+                    onClick={onOpenInventory}
+                >
+                    <span style={{ fontSize: '18px' }}>🎒</span>
+                    <span>{t('lobby.inventory')}</span>
+                </button>
             </div>
 
             {/* Game Modes */}
@@ -73,6 +104,8 @@ function HomeTab({ onQuickMatch, remainingFreeGames, freeGamesPerDay, onlineCoun
             </div>
 
             {/* Note: Friends list removed - feature not implemented */}
+
+            {showRules && <RulesModal onClose={() => setShowRules(false)} />}
         </div>
     );
 }

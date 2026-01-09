@@ -1,6 +1,6 @@
 {
     "app": {
-        "title": "Q-Gambit",
+        "title": "Quess",
         "subtitle": "量子チェス"
     },
     "nav": {
@@ -17,7 +17,9 @@
         "blitz": "ブリッツ",
         "speed": "スピード",
         "how_to_play": "遊び方",
-        "watch_ad": "広告を見て1回追加"
+        "inventory": "かばん",
+        "watch_ad": "広告を見て1回追加",
+        "online_count": "{{count}}人 オンライン"
     },
     "game": {
         "your_turn": "あなたの番です",
@@ -44,7 +46,10 @@
         "confirmed": "確定: {{piece}}",
         "resign_confirm_title": "投了しますか？",
         "resign_confirm_message": "この対局に敗北します。",
-        "cancel": "キャンセル"
+        "cancel": "キャンセル",
+        "share": "結果をシェア",
+        "share_message_win": "量子チェスでAIに勝利しました！🚀",
+        "share_message_loss": "量子チェスでAIに敗北... 🤖"
     },
     "profile": {
         "player_profile": "プロフィール",
@@ -77,9 +82,52 @@
     },
     "rules": {
         "title": "量子チェスのルール",
-        "superposition": "1. 重ね合わせ: 駒は複数の状態を持ちます。動かすことで「観測」され、特定の駒に確定します。",
-        "entanglement": "2. 量子もつれ: チーム内の駒数は制限されています（例：ナイトは2つ）。1つが確定すると、他の駒の可能性も連動して変化します。",
-        "victory": "3. 勝利条件: 相手のキングを取ることです。キングは確定していないと取れません。",
+        "superposition_title": "重ね合わせ (Superposition)",
+        "superposition_content": "駒は複数の種類の可能性を同時に持ちます。動かすことで「観測」され、確率に基づいて特定の駒に確定します。",
+        "entanglement_title": "量子もつれ (Entanglement)",
+        "entanglement_content": "チーム内の駒数は制限されています（例：ナイトは2つ）。1つが確定すると、他の駒の可能性も連動して消えることがあります。",
+        "victory_title": "勝利条件",
+        "victory_content": "相手のキングを取れば勝利です。ただし、キングは「確定」していないと取ることができません。",
+        "close": "理解しました"
+    },
+    "settings": {
+        "title": "設定",
+        "audio": "オーディオ",
+        "master_volume": "マスター音量",
+        "sfx_volume": "効果音 (SE)",
+        "graphics": "グラフィック",
+        "high_desc": "高画質 (パーティクル有効)",
+        "low_desc": "パフォーマンス優先 (パーティクル無効)",
         "close": "閉じる"
+    },
+    "bonus": {
+        "dailyLogin": "デイリーボーナス",
+        "currentStreak": "連続ログイン",
+        "days": "日目",
+        "comeBackTomorrow": "明日もログインしてゲット！",
+        "claim": "報酬を受け取る"
+    },
+    "inventory": {
+        "title": "駒のかばん",
+        "hint": "合成すると価値が上がります！ランクが高い駒ほど、より多くの無料対局チケットと交換できます。"
+    },
+    "auth": {
+        "title": "アカウント連携",
+        "link_description": "Googleアカウントと連携すると、データを他のデバイスで引き継げます。",
+        "login_description": "Googleアカウントでログインしてください。",
+        "link_google": "Googleアカウントと連携",
+        "sign_in_google": "Googleでログイン",
+        "guest_note": "※ 連携しなくても、ゲストとしてプレイできます",
+        "login": "ログイン",
+        "logout": "ログアウト",
+        "guest": "ゲスト",
+        "guest_login": "ゲストとしてプレイ"
+    },
+    "leaderboard": {
+        "title": "量子ランキング",
+        "rank": "順位",
+        "player": "プレイヤー",
+        "rating": "レート",
+        "tier": "階級"
     }
 }

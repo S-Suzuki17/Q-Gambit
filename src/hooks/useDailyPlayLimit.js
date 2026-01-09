@@ -54,24 +54,42 @@ export function useDailyPlayLimit() {
         return () => clearInterval(interval);
     }, [dailyData.date]);
 
-    // Calculate remaining free games
-    const totalAllowed = FREE_GAMES_PER_DAY + dailyData.bonusGames;
-    const remainingFreeGames = Math.max(0, totalAllowed - dailyData.count);
-    const canPlayFree = remainingFreeGames > 0;
+    // Calculate remaining games
+    // Total available = (Daily Free - Daily Used) + Persistent Tickets
+    const dailyRemaining = Math.max(0, FREE_GAMES_PER_DAY - dailyData.count);
+    const bonusTickets = dailyData.bonusTickets || 0;
 
-    // Increment play count when starting a game
+    const canPlayFree = dailyRemaining > 0 || bonusTickets > 0;
+    const remainingFreeGames = dailyRemaining; // Display daily separately? Or combine?
+    // User requested "no-ad tickets", usually displayed separately or as "Total Free: X"
+    // Let's expose both for UI flexibility
+
+    // Increment play count
     const incrementPlayCount = useCallback(() => {
         setDailyData(prev => {
-            const newData = { ...prev, count: prev.count + 1 };
+            const dailyLeft = Math.max(0, FREE_GAMES_PER_DAY - prev.count);
+
+            let newData;
+            if (dailyLeft > 0) {
+                // Consume daily free game first
+                newData = { ...prev, count: prev.count + 1 };
+            } else if ((prev.bonusTickets || 0) > 0) {
+                // Consume ticket
+                newData = { ...prev, bonusTickets: prev.bonusTickets - 1 };
+            } else {
+                // Should be blocked by check, but just increment count to be safe/track attempts
+                newData = { ...prev, count: prev.count + 1 };
+            }
+
             saveDailyData(newData);
             return newData;
         });
     }, []);
 
-    // Grant bonus game after watching ad
-    const grantBonusGame = useCallback(() => {
+    // Grant bonus game (ad watch or synthesis) - adds to persistent tickets
+    const grantBonusGame = useCallback((amount = 1) => {
         setDailyData(prev => {
-            const newData = { ...prev, bonusGames: prev.bonusGames + 1 };
+            const newData = { ...prev, bonusTickets: (prev.bonusTickets || 0) + amount };
             saveDailyData(newData);
             return newData;
         });
@@ -79,8 +97,9 @@ export function useDailyPlayLimit() {
 
     return {
         canPlayFree,
-        remainingFreeGames,
-        todayPlayCount: dailyData.count,
+        remainingFreeGames, // Daily remaining
+        bonusTickets,       // Persistent tickets
+        totalFreeAvailable: dailyRemaining + bonusTickets,
         freeGamesPerDay: FREE_GAMES_PER_DAY,
         incrementPlayCount,
         grantBonusGame,

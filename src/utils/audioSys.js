@@ -6,8 +6,47 @@
 class AudioSys {
     constructor() {
         this.ctx = null;
-        this.masterVolume = 0.3;
+        this.masterVolume = 0.5;
+        this.sfxVolume = 1.0;
         this.enabled = true;
+        this.loadSettings();
+    }
+
+    loadSettings() {
+        if (typeof window !== 'undefined') {
+            const saved = localStorage.getItem('q-gambit-settings');
+            if (saved) {
+                const settings = JSON.parse(saved);
+                this.masterVolume = settings.masterVolume ?? 0.5;
+                this.sfxVolume = settings.sfxVolume ?? 1.0;
+                this.enabled = settings.soundEnabled ?? true;
+            }
+        }
+    }
+
+    saveSettings() {
+        if (typeof window !== 'undefined') {
+            localStorage.setItem('q-gambit-settings', JSON.stringify({
+                masterVolume: this.masterVolume,
+                sfxVolume: this.sfxVolume,
+                soundEnabled: this.enabled
+            }));
+        }
+    }
+
+    setMasterVolume(val) {
+        this.masterVolume = Math.max(0, Math.min(1, val));
+        this.saveSettings();
+    }
+
+    setSfxVolume(val) {
+        this.sfxVolume = Math.max(0, Math.min(1, val));
+        this.saveSettings();
+    }
+
+    setEnabled(val) {
+        this.enabled = val;
+        this.saveSettings();
     }
 
     init() {
@@ -21,6 +60,10 @@ class AudioSys {
         if (!this.enabled || !this.ctx) return;
         if (this.ctx.state === 'suspended') this.ctx.resume();
 
+        // Calculate final volume: Tone Vol * SFX Vol * Master Vol
+        const finalVol = vol * this.sfxVolume * this.masterVolume;
+        if (finalVol <= 0.01) return; // Skip if silent
+
         const osc = this.ctx.createOscillator();
         const gain = this.ctx.createGain();
 
@@ -28,7 +71,7 @@ class AudioSys {
         osc.frequency.setValueAtTime(frequency, this.ctx.currentTime + startTime);
 
         gain.gain.setValueAtTime(0, this.ctx.currentTime + startTime);
-        gain.gain.linearRampToValueAtTime(this.masterVolume * vol, this.ctx.currentTime + startTime + 0.01);
+        gain.gain.linearRampToValueAtTime(finalVol, this.ctx.currentTime + startTime + 0.01);
         gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + startTime + duration);
 
         osc.connect(gain);

@@ -5,6 +5,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { db, isFirebaseConfigured, appId } from '../config/firebase';
 import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
+import { getRatingTier } from '../utils/rating';
 
 const LEADERBOARD_CACHE_KEY = 'qgambit_leaderboard';
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
@@ -47,7 +48,7 @@ export function useLeaderboard() {
             const mockData = generateMockLeaderboard();
             setLeaderboard(mockData);
             setLoading(false);
-            console.log('[Leaderboard] Using mock data (Firebase not configured)');
+            // console.log('[Leaderboard] Using mock data (Firebase not configured)');
             return;
         }
 
@@ -75,7 +76,8 @@ export function useLeaderboard() {
                         ? Math.round((data.wins / data.gamesPlayed) * 100)
                         : 0,
                     // Generate display name from UID (first 8 chars)
-                    displayName: `Player_${doc.id.slice(0, 6).toUpperCase()}`,
+                    displayName: data.displayName || `Player_${doc.id.slice(0, 6).toUpperCase()}`,
+                    tier: getRatingTier(data.rating || 1500)
                 });
             });
 
@@ -88,7 +90,7 @@ export function useLeaderboard() {
                 timestamp: Date.now(),
             }));
 
-            console.log('[Leaderboard] Fetched', players.length, 'players');
+            // console.log('[Leaderboard] Fetched', players.length, 'players');
         } catch (e) {
             console.error('[Leaderboard] Fetch error:', e);
             setError(e.message);
@@ -133,5 +135,6 @@ function generateMockLeaderboard() {
         wins: 60 - (i * 3) + Math.floor(Math.random() * 10),
         losses: 30 + (i * 2) + Math.floor(Math.random() * 5),
         winRate: Math.max(40, 70 - (i * 3) + Math.floor(Math.random() * 5)),
+        tier: getRatingTier(2000 - (i * 50) + Math.floor(Math.random() * 30))
     }));
 }

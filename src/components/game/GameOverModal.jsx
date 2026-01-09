@@ -3,7 +3,7 @@
  * Displays game result and options after game ends
  */
 import React from 'react';
-import { RotateCcw } from 'lucide-react';
+import { RotateCcw, Share2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 function GameOverModal({ winner, myColor, onPlayAgain, onExit }) {
@@ -13,6 +13,16 @@ function GameOverModal({ winner, myColor, onPlayAgain, onExit }) {
 
     // Convert internal winner value to display color
     const winnerDisplay = winner === 'WHITE' ? 'CYAN' : 'ROSE';
+
+    const handleShare = () => {
+        const text = isVictory
+            ? t('game.share_message_win')
+            : t('game.share_message_loss');
+        const url = "https://q-gambit.vercel.app";
+        const hashtags = "QuantumChess,QGambit"; // No specific hashtags in prompt but good to have
+        const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}&hashtags=${hashtags}`;
+        window.open(twitterUrl, '_blank');
+    };
 
     return (
         <div className="game-over-modal">
@@ -27,6 +37,10 @@ function GameOverModal({ winner, myColor, onPlayAgain, onExit }) {
                     <button className="btn btn-primary" onClick={onPlayAgain}>
                         <RotateCcw size={16} className="btn-icon" />
                         {t('game.play_again')}
+                    </button>
+                    <button className="btn btn-primary" style={{ background: '#1DA1F2' }} onClick={handleShare}>
+                        <Share2 size={16} className="btn-icon" />
+                        {t('game.share')}
                     </button>
                     <button className="btn btn-secondary" onClick={onExit}>
                         {t('game.exit')}
